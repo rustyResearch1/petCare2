@@ -5,6 +5,7 @@ export type MatchClinic = {
   id: string;
   name: string;
   neighborhood: string | null;
+  kind: "general" | "house_call" | "vaccine_clinic" | "specialty" | "emergency" | "closed";
   speciesSeen: string[];
   exotics: boolean | null;
   emergency24h: boolean | null;
@@ -50,19 +51,30 @@ export function rankClinics(input: MatchInput, clinics: MatchClinic[]): RankedCl
   const species: Species = isSpecies(input.species) ? input.species : "other";
   const home = findNeighborhood(input.ownerNeighborhood);
   const comfort = COMFORT_KM[input.travel];
+  // Owners travel further for an exotics vet, so distance counts for less.
+  const exotic = EXOTIC_SPECIES.has(species);
 
   const ranked = clinics.map((clinic): RankedClinic => {
     const reasons: string[] = [];
     let excluded: string | null = null;
     let score = 50;
 
+    const KIND_EXCLUDED: Partial<Record<MatchClinic["kind"], string>> = {
+      vaccine_clinic: "Vaccine-only clinic",
+      specialty: "Specialist referral practice",
+      emergency: "Emergency and specialty only",
+      closed: "Temporarily closed",
+    };
+    excluded = KIND_EXCLUDED[clinic.kind] ?? null;
+
     const sees = seesSpecies(clinic, species);
-    if (sees === "no") excluded = `Doesn't list ${species.replace("_", " ")}s`;
+    if (sees === "no") excluded ??= `Doesn't list ${species.replace("_", " ")}s`;
     else if (sees === "yes") {
-      score += EXOTIC_SPECIES.has(species) ? 25 : 10;
+      score += exotic ? 35 : 10;
       reasons.push(`Sees ${species.replace("_", " ")}s`);
     } else {
-      score -= 10;
+      // Most general clinics don't see exotics, so an unconfirmed clinic is a long shot.
+      score -= exotic ? 30 : 10;
       reasons.push("Species list not confirmed");
     }
 
@@ -72,11 +84,15 @@ export function rankClinics(input: MatchInput, clinics: MatchClinic[]): RankedCl
       reasons.push("Accepting new patients");
     } else reasons.push("New-patient status unknown");
 
-    const place = findNeighborhood(clinic.neighborhood);
+    const place = clinic.kind === "house_call" ? undefined : findNeighborhood(clinic.neighborhood);
     let km: number | null = null;
-    if (home && place) {
+    if (clinic.kind === "house_call") {
+      // Distance doesn't apply; useful when getting there is the hard part.
+      score += input.travel === "walk" || input.travel === "transit" ? 6 : -4;
+      reasons.push("Comes to your home");
+    } else if (home && place) {
       km = Math.round(distanceKm(home, place) * 10) / 10;
-      const weight = input.priority === "closest" ? 8 : 4;
+      const weight = (input.priority === "closest" ? 8 : 4) / (exotic ? 2 : 1);
       score -= km * weight;
       if (km > comfort) score -= (km - comfort) * weight * 2;
       reasons.push(km < 0.5 ? "In your neighborhood" : `About ${km} km away`);

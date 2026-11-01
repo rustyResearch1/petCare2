@@ -3,6 +3,7 @@ import { rankClinics, type MatchClinic, type MatchInput } from "@/lib/match";
 import { upcomingVaccines, type PetProfile } from "@/lib/records";
 
 const base: Omit<MatchClinic, "id" | "name" | "neighborhood"> = {
+  kind: "general",
   speciesSeen: ["dog", "cat"],
   exotics: false,
   emergency24h: false,
@@ -60,6 +61,39 @@ describe("rankClinics", () => {
       { ...base, id: "b", name: "B", neighborhood: "Mission", accepting: "yes", onlineBookingUrl: "https://example.com" },
     ];
     expect(rankClinics(input({ ownerNeighborhood: "Mission", priority: "soonest" }), pair)[0].clinic.id).toBe("b");
+  });
+});
+
+describe("clinic kinds and messy neighborhoods", () => {
+  it("excludes vaccine-only, specialty, ER-only and closed clinics", () => {
+    const list: MatchClinic[] = [
+      { ...base, id: "vax", name: "Vax", neighborhood: "Outer Sunset", kind: "vaccine_clinic" },
+      { ...base, id: "spec", name: "Spec", neighborhood: "Outer Sunset", kind: "specialty" },
+      { ...base, id: "er", name: "ER", neighborhood: "Outer Sunset", kind: "emergency" },
+      { ...base, id: "closed", name: "Closed", neighborhood: "Outer Sunset", kind: "closed" },
+      { ...base, id: "gp", name: "GP", neighborhood: "Outer Sunset" },
+    ];
+    expect(rankClinics(input(), list).filter((x) => !x.excluded).map((x) => x.clinic.id)).toEqual(["gp"]);
+  });
+
+  it("parses free-text neighborhoods", () => {
+    const list: MatchClinic[] = [{ ...base, id: "m", name: "M", neighborhood: "Mission / Potrero Hill border" }];
+    expect(rankClinics(input({ ownerNeighborhood: "Mission" }), list)[0].distanceKm).toBe(0);
+  });
+
+  it("puts a farther confirmed exotics clinic above a nearby unconfirmed one for a rabbit", () => {
+    const list: MatchClinic[] = [
+      { ...base, id: "near-unknown", name: "Near", neighborhood: "Outer Sunset", speciesSeen: [], exotics: null },
+      { ...base, id: "far-exotics", name: "Far", neighborhood: "Pacific Heights", speciesSeen: ["rabbit", "bird"], exotics: true },
+    ];
+    expect(rankClinics(input({ species: "rabbit", travel: "car" }), list)[0].clinic.id).toBe("far-exotics");
+  });
+
+  it("treats house calls as distance-free", () => {
+    const list: MatchClinic[] = [{ ...base, id: "hc", name: "HC", neighborhood: "Citywide (house calls)", kind: "house_call" }];
+    const r = rankClinics(input({ travel: "walk" }), list)[0];
+    expect(r.distanceKm).toBeNull();
+    expect(r.reasons).toContain("Comes to your home");
   });
 });
 

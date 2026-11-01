@@ -75,6 +75,7 @@ create table if not exists clinics (
   notes text,
   updated_at timestamptz not null default now()
 );
+alter table clinics add column if not exists kind text not null default 'general';
 create unique index if not exists clinics_name_address_idx on clinics(name, coalesce(address, ''));
 
 create table if not exists activity (

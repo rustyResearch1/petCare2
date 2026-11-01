@@ -3,6 +3,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import * as schema from "./db/schema";
 import { SPECIES } from "./species";
+import { CLINIC_KINDS, type ClinicKind } from "./db/schema";
 
 type Row = Record<string, string | undefined>;
 
@@ -29,6 +30,7 @@ const accepting = (v?: string): schema.Accepting => {
 /**
  * Upserts clinics from CSV keyed on (name, address).
  * Columns: name, neighborhood, address, phone, website, species_seen, exotics, emergency_24h,
+ * kind (general | house_call | vaccine_clinic | specialty | emergency | closed),
  * online_booking_url, booking_method, new_patient_form_url, ownership, source_url, notes,
  * and optionally accepting, exam_fee_usd.
  */
@@ -47,6 +49,7 @@ export async function importClinicsCsv(db: NodePgDatabase<typeof schema>, csv: s
     const values = {
       name,
       neighborhood: str(r.neighborhood),
+      kind: (CLINIC_KINDS as string[]).includes((r.kind ?? "").trim()) ? ((r.kind as string).trim() as ClinicKind) : "general",
       address,
       phone: str(r.phone),
       website: str(r.website),

@@ -5,6 +5,15 @@ import { ImportClinics } from "./ImportClinics";
 import { formatSf } from "@/lib/time";
 import { SPECIES_LABEL, isSpecies } from "@/lib/species";
 
+const KIND_LABEL: Record<string, string> = {
+  general: "General practice",
+  house_call: "House calls",
+  vaccine_clinic: "Vaccine clinic",
+  specialty: "Specialist",
+  emergency: "Emergency and specialty",
+  closed: "Temporarily closed",
+};
+
 export default async function ClinicsPage() {
   const clinics = await listClinics();
   const accepting = clinics.filter((c) => c.accepting === "yes").length;
@@ -46,6 +55,7 @@ export default async function ClinicsPage() {
                   <td className="px-4 py-3">
                     <p className="font-[620]">{c.name}</p>
                     <p className="tabular text-[0.8125rem] text-muted">{[c.phone, c.ownership].filter(Boolean).join(", ")}</p>
+                    {c.kind !== "general" && <p className="text-[0.8125rem] text-amber">{KIND_LABEL[c.kind]}</p>}
                     {c.emergency24h && <p className="text-[0.8125rem] text-iceplant">24-hour emergency</p>}
                   </td>
                   <td className="px-4 py-3">{c.neighborhood ?? ""}</td>

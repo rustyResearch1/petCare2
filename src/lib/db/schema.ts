@@ -100,6 +100,8 @@ export const petRecords = pgTable("pet_records", {
 });
 
 export type Accepting = "yes" | "no" | "unknown";
+export type ClinicKind = "general" | "house_call" | "vaccine_clinic" | "specialty" | "emergency" | "closed";
+export const CLINIC_KINDS: ClinicKind[] = ["general", "house_call", "vaccine_clinic", "specialty", "emergency", "closed"];
 
 export const clinics = pgTable("clinics", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -108,6 +110,7 @@ export const clinics = pgTable("clinics", {
   address: text("address"),
   phone: text("phone"),
   website: text("website"),
+  kind: text("kind").$type<ClinicKind>().notNull().default("general"),
   speciesSeen: text("species_seen").array().notNull().default([]),
   exotics: boolean("exotics"),
   emergency24h: boolean("emergency_24h"),
