@@ -2,7 +2,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 // The app loads the live site, so every web deploy reaches app users without an app store update.
 // Point it at a different deployment with: SETTLED_URL=https://staging.example.com npx cap sync
-const url = process.env.SETTLED_URL ?? "https://settled-production.up.railway.app";
+const url = process.env.SETTLED_URL ?? "https://web-production-bc0164.up.railway.app";
 
 const config: CapacitorConfig = {
   appId: "pet.settled.app",
