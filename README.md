@@ -2,6 +2,12 @@
 
 Concierge vet setup for pet owners new to San Francisco. Owners fill in one form; you (and later, agents) shortlist clinics, call, fill in new-patient forms, send records and book the first visit.
 
+## Live
+
+- Site: https://web-production-bc0164.up.railway.app
+- Ops: https://web-production-bc0164.up.railway.app/ops (user `ops`, password in Railway variables as `OPS_PASSWORD`)
+- Hosting: Railway project `settled` (services `web` and `Postgres`). Pushing to `main` redeploys.
+
 ## What's here
 
 | Path | What it is |
