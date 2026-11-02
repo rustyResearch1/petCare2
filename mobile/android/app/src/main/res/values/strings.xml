@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Settled</string>
+    <string name="title_activity_main">Settled</string>
+    <string name="package_name">pet.settled.app</string>
+    <string name="custom_url_scheme">pet.settled.app</string>
+</resources>

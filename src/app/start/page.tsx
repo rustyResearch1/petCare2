@@ -9,7 +9,7 @@ export default function StartPage() {
   return (
     <>
       <Header showCta={false} />
-      <main className="gutter pb-24 pt-10">
+      <main className="gutter pt-10" style={{ paddingBottom: "calc(6rem + env(safe-area-inset-bottom, 0px))" }}>
         <div className="mx-auto max-w-2xl">
           <h1 className="text-[clamp(2.25rem,6vw,3.25rem)] font-[760] [font-stretch:86%] leading-[1]">
             Start your setup

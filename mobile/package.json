@@ -1,0 +1,22 @@
+{
+  "name": "settled-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "description": "iOS and Android shell for Settled. Loads the live web app and adds native packaging.",
+  "scripts": {
+    "sync": "cap sync",
+    "ios": "cap sync ios && cap open ios",
+    "android": "cap sync android && cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/ios": "^8.6.0",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.4"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.6.0",
+    "typescript": "^6.0.3"
+  }
+}

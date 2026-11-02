@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Settled</title>
+    <style>
+      :root { color-scheme: light dark; --bg: #e6ebe9; --fg: #14212a; --muted: #55666b; }
+      @media (prefers-color-scheme: dark) { :root { --bg: #0e181c; --fg: #e4ece9; --muted: #93a6a9; } }
+      html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); font: 16px/1.5 -apple-system, system-ui, sans-serif; }
+      main { min-height: 100%; display: grid; place-items: center; padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left)); box-sizing: border-box; }
+      h1 { font-size: 28px; line-height: 1.1; margin: 0 0 12px; }
+      p { color: var(--muted); margin: 0 0 20px; max-width: 32ch; }
+      button { font: inherit; font-weight: 600; padding: 12px 20px; border-radius: 12px; border: 0; background: #b2215f; color: #fff; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div>
+        <h1>Can't reach Settled</h1>
+        <p>Check your connection and try again. If your pet needs care right now, call a 24-hour emergency animal hospital.</p>
+        <button type="button" onclick="location.reload()">Try again</button>
+      </div>
+    </main>
+  </body>
+</html>

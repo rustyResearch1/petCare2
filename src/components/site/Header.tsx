@@ -13,8 +13,8 @@ export function Wordmark({ className = "" }: { className?: string }) {
 export function Header({ showCta = true }: { showCta?: boolean }) {
   return (
     <header
-      className="gutter sticky z-20 border-b border-line/60 bg-fog/85 backdrop-blur"
-      style={{ top: "env(safe-area-inset-top, 0px)" }}
+      className="gutter sticky top-0 z-20 border-b border-line/60 bg-fog/85 backdrop-blur"
+      style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4">
         <Link href="/" aria-label={`${site.name} home`}>
@@ -40,7 +40,10 @@ export function Header({ showCta = true }: { showCta?: boolean }) {
 
 export function Footer() {
   return (
-    <footer className="gutter border-t border-line py-10 text-[0.9375rem] text-muted">
+    <footer
+      className="gutter border-t border-line pt-10 text-[0.9375rem] text-muted"
+      style={{ paddingBottom: "calc(2.5rem + env(safe-area-inset-bottom, 0px))" }}
+    >
       <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <Wordmark className="text-ink" />

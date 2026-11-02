@@ -12,6 +12,14 @@ Concierge vet setup for pet owners new to San Francisco. Owners fill in one form
 | `/ops` | Your dashboard: open requests, hours since request, minutes you've logged, median time to booking |
 | `/ops/r/<id>` | One request: pet profiles, ranked clinics per pet with reasons, log a call, book |
 | `/ops/clinics` | Clinic database: new-patient status, exam fees, CSV import |
+| `/api/v1/setup/<token>` | Owner status as JSON, for the mobile apps |
+| `/api/health` | Health check (app and database) |
+
+## On phones
+
+- The site installs to the home screen (web app manifest, icons, offline page, service worker).
+  Android shows an install button; iPhone owners see "Share, then Add to Home Screen" on their status page.
+- `mobile/` holds iOS and Android projects (Capacitor) that load the live site. See `mobile/README.md`.
 
 Under the hood:
 
@@ -30,6 +38,8 @@ npm test
 ```
 
 ## Deploy (Railway or any Node host)
+
+`railway.json` sets the start command and health check. On Railway:
 
 1. Create a Postgres database and set `DATABASE_URL` (add `PGSSL=require` if your host needs SSL).
 2. Set `ANTHROPIC_API_KEY`, `OPS_PASSWORD`, and `PUBLIC_BASE_URL` (your domain).

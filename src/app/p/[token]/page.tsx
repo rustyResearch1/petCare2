@@ -6,6 +6,7 @@ import { getRequestByToken } from "@/lib/queries";
 import { upcomingVaccines } from "@/lib/records";
 import { SPECIES_LABEL, isSpecies } from "@/lib/species";
 import { site } from "@/lib/site";
+import { InstallHint } from "@/components/pwa/InstallHint";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Your setup", robots: { index: false } };
@@ -57,6 +58,10 @@ export default async function OwnerPage({
               </p>
             </div>
           )}
+
+          <div className="mb-8">
+            <InstallHint />
+          </div>
 
           <h1 className="text-[clamp(2.25rem,6vw,3.25rem)] font-[760] [font-stretch:86%] leading-[1]">
             {pets.map((p) => p.name).join(" and ")}&apos;s setup
