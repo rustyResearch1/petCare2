@@ -5,6 +5,9 @@ import { getDb, schema } from "@/lib/db/client";
 import { IntakeInput } from "@/lib/intake";
 import { MAX_RECORD_BYTES, MAX_RECORDS_PER_PET, isSupportedRecordType } from "@/lib/records";
 import { runExtraction } from "@/lib/jobs";
+import { storeUpload } from "@/lib/storage";
+import { notify, notifyOps } from "@/lib/notify";
+import { SPECIES_LABEL } from "@/lib/species";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -53,6 +56,20 @@ export async function POST(req: Request) {
   const db = await getDb();
   const token = randomBytes(18).toString("base64url");
 
+  // Upload files first so the database transaction stays short.
+  const stored = await Promise.all(
+    filesByPet.map((files) =>
+      Promise.all(
+        files.map(async (f) => ({
+          filename: f.name.slice(0, 200),
+          mimeType: f.type,
+          size: f.size,
+          ...(await storeUpload("records", { name: f.name, type: f.type, bytes: Buffer.from(await f.arrayBuffer()) })),
+        })),
+      ),
+    ),
+  );
+
   const { requestId, petIds } = await db.transaction(async (tx) => {
     const [owner] = await tx
       .insert(schema.owners)
@@ -98,14 +115,8 @@ export async function POST(req: Request) {
         })
         .returning({ id: schema.pets.id });
       petIds.push(pet.id);
-      for (const f of files) {
-        await tx.insert(schema.petRecords).values({
-          petId: pet.id,
-          filename: f.name.slice(0, 200),
-          mimeType: f.type,
-          size: f.size,
-          bytes: Buffer.from(await f.arrayBuffer()),
-        });
+      for (const f of stored[i]) {
+        await tx.insert(schema.petRecords).values({ petId: pet.id, ...f });
       }
     }
 
@@ -117,8 +128,20 @@ export async function POST(req: Request) {
     return { requestId: request.id, petIds };
   });
 
-  // Read records with Claude after responding, so the owner isn't kept waiting.
+  const petList = input.pets.map((p) => `${p.name} (${p.species === "other" ? p.speciesOther || "other" : SPECIES_LABEL[p.species]})`).join(", ");
+
+  // Read records with Claude and send emails after responding, so the owner isn't kept waiting.
   after(async () => {
+    await notify({
+      email: input.owner.email,
+      kind: "received",
+      requestId,
+      title: "We got your setup request",
+      body: `Thanks, ${input.owner.name.split(" ")[0]}. We're finding a vet for ${petList} near ${input.owner.neighborhood}.\nWe aim to book a first visit within 48 hours and will email you when it's confirmed. You can check progress any time.`,
+      link: `/p/${token}`,
+      ctaLabel: "See your setup",
+    });
+    await notifyOps(`New setup: ${petList}`, [`${input.owner.name}, ${input.owner.neighborhood}`], `/ops/r/${requestId}`);
     for (const [i, petId] of petIds.entries()) {
       if (filesByPet[i].length) await runExtraction(petId);
     }

@@ -18,6 +18,11 @@ Concierge vet setup for pet owners new to San Francisco. Owners fill in one form
 | `/ops` | Your dashboard: open requests, hours since request, minutes you've logged, median time to booking |
 | `/ops/r/<id>` | One request: pet profiles, ranked clinics per pet with reasons, log a call, book |
 | `/ops/clinics` | Clinic database: new-patient status, exam fees, CSV import |
+| `/signin` | Passwordless sign-in: Google, or a 6-digit code by email |
+| `/account` | Owner home: updates, pets, bookings, records |
+| `/account/bills` | Bill check: upload an invoice, get a line-by-line price comparison |
+| `/account/assistant` | Assistant chat; anything needing a person becomes a task for you |
+| `/ops/inbox` | Your queue: assistant requests, unpriced bill items, replies to owners |
 | `/api/v1/setup/<token>` | Owner status as JSON, for the mobile apps |
 | `/api/health` | Health check (app and database) |
 
@@ -27,9 +32,24 @@ Concierge vet setup for pet owners new to San Francisco. Owners fill in one form
   Android shows an install button; iPhone owners see "Share, then Add to Home Screen" on their status page.
 - `mobile/` holds iOS and Android projects (Capacitor) that load the live site. See `mobile/README.md`.
 
+## Turning features on
+
+Each feature works without its keys and switches on when they're set in Railway (web service, Variables):
+
+| Feature | Variables | Without them |
+| --- | --- | --- |
+| Reading records and bills, assistant | `ANTHROPIC_API_KEY` | Files are kept; the assistant forwards messages to you |
+| Emails and sign-in codes | `RESEND_API_KEY`, `EMAIL_FROM` (a verified domain) | Written to the server log |
+| Google sign-in | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Email-code sign-in only |
+| Payments | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | No pay button (or `NEXT_PUBLIC_PAYMENT_LINK_URL`) |
+| Team alerts | `OPS_NOTIFY_EMAIL` | Written to the server log |
+| File storage | `S3_*` (set to the Railway bucket) | Files stored in Postgres |
+
 Under the hood:
 
 - `src/lib/extract.ts`: reads uploaded PDFs and photos with Claude (structured output) into a pet profile: vaccines with due dates, meds, conditions, and what's missing.
+- `src/lib/bills.ts`: bill check. Reads the invoice, saves every line item to a shared price index (`bill_items`), looks up public prices with Claude's web search, and writes a price-only report. Items it can't price become tasks for you to call around.
+- `src/lib/assistant.ts`: the assistant. Claude with tools that read the owner's own data, rank clinics and create tasks. It never diagnoses or books on its own.
 - `src/lib/match.ts`: ranks clinics for a pet by species fit, new-patient status, distance, fee, online booking and ownership. Tested in `tests/match.test.ts`.
 - `src/lib/db/`: Postgres schema (Drizzle). With no `DATABASE_URL` it runs an embedded Postgres (PGlite) in `./.data` for local work.
 - `data/clinics.csv`: seeded automatically the first time the app boots with an empty clinics table.

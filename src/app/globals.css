@@ -86,20 +86,172 @@ h3 {
   border-radius: 4px;
 }
 
-/* Gutter that also clears a phone's side system bars. */
-.gutter {
-  padding-left: max(20px, env(safe-area-inset-left, 0px));
-  padding-right: max(20px, env(safe-area-inset-right, 0px));
+/* Component styles live in a layer so Tailwind utilities can override them. */
+@layer components {
+  /* Gutter that also clears a phone's side system bars. */
+  .gutter {
+    padding-left: max(20px, env(safe-area-inset-left, 0px));
+    padding-right: max(20px, env(safe-area-inset-right, 0px));
+  }
+
+  /* The one typographic moment: the headline settles from wide to its resting width. */
+  .settle {
+    font-stretch: 84%;
+    font-weight: 760;
+    line-height: 0.96;
+    letter-spacing: -0.02em;
+    animation: settle 1100ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  /* Border beam (after Magic UI): a short light travelling around the card's edge. */
+  .beam {
+    position: relative;
+    isolation: isolate;
+  }
+  .beam::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1.5px;
+    background: conic-gradient(
+      from var(--beam-angle),
+      transparent 0deg,
+      transparent 290deg,
+      color-mix(in oklab, var(--iceplant) 85%, transparent) 330deg,
+      transparent 360deg
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: beam 6s linear infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Spotlight that follows the pointer (after Magic UI's MagicCard). */
+  .spotlight {
+    position: relative;
+    background:
+      radial-gradient(
+        320px circle at var(--mx, -500px) var(--my, -500px),
+        color-mix(in oklab, var(--iceplant) 9%, transparent),
+        transparent 70%
+      ),
+      var(--paper);
+  }
+
+  .pulse-ring {
+    animation: pulse-ring 1.4s ease-out infinite;
+  }
+
+
+  /* Form controls share one look. */
+  .field {
+    display: grid;
+    gap: 6px;
+  }
+  .field > label,
+  .field > .label {
+    font-size: 0.875rem;
+    font-weight: 560;
+  }
+  .field .hint {
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+  .input {
+    width: 100%;
+    min-height: 44px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--paper);
+    color: var(--ink);
+    padding: 10px 12px;
+    font: inherit;
+    font-size: 1rem;
+  }
+  .input:focus {
+    outline: none;
+    border-color: var(--iceplant);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--iceplant) 20%, transparent);
+  }
+  textarea.input {
+    min-height: 88px;
+    resize: vertical;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 0.9375rem;
+    cursor: pointer;
+    user-select: none;
+  }
+  .chip[aria-pressed="true"],
+  .chip:has(input:checked) {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .chip input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 48px;
+    padding: 12px 22px;
+    border-radius: 12px;
+    font-weight: 620;
+    font-size: 1rem;
+    cursor: pointer;
+    transition:
+      transform 120ms ease,
+      background-color 120ms ease;
+  }
+  .btn:active {
+    transform: translateY(1px);
+  }
+  .btn-primary {
+    background: var(--iceplant);
+    color: var(--on-iceplant);
+  }
+  .btn-primary:hover {
+    background: color-mix(in oklab, var(--iceplant) 88%, var(--ink));
+  }
+  .btn-quiet {
+    border: 1px solid var(--line);
+    background: var(--paper);
+    color: var(--ink);
+  }
+  .btn-quiet:hover {
+    border-color: var(--ink);
+  }
+  .btn[disabled] {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
 }
 
-/* The one typographic moment: the headline settles from wide to its resting width. */
-.settle {
-  font-stretch: 84%;
-  font-weight: 760;
-  line-height: 0.96;
-  letter-spacing: -0.02em;
-  animation: settle 1100ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
 @keyframes settle {
   from {
     font-stretch: 140%;
@@ -107,59 +259,12 @@ h3 {
   }
 }
 
-/* Border beam (after Magic UI): a short light travelling around the card's edge. */
-@property --beam-angle {
-  syntax: "<angle>";
-  initial-value: 0deg;
-  inherits: false;
-}
-.beam {
-  position: relative;
-  isolation: isolate;
-}
-.beam::before {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  padding: 1.5px;
-  background: conic-gradient(
-    from var(--beam-angle),
-    transparent 0deg,
-    transparent 290deg,
-    color-mix(in oklab, var(--iceplant) 85%, transparent) 330deg,
-    transparent 360deg
-  );
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  animation: beam 6s linear infinite;
-  pointer-events: none;
-  z-index: 1;
-}
 @keyframes beam {
   to {
     --beam-angle: 360deg;
   }
 }
 
-/* Spotlight that follows the pointer (after Magic UI's MagicCard). */
-.spotlight {
-  position: relative;
-  background:
-    radial-gradient(
-      320px circle at var(--mx, -500px) var(--my, -500px),
-      color-mix(in oklab, var(--iceplant) 9%, transparent),
-      transparent 70%
-    ),
-    var(--paper);
-}
-
-.pulse-ring {
-  animation: pulse-ring 1.4s ease-out infinite;
-}
 @keyframes pulse-ring {
   from {
     box-shadow: 0 0 0 0 color-mix(in oklab, var(--iceplant) 45%, transparent);
@@ -169,113 +274,16 @@ h3 {
   }
 }
 
+@property --beam-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .settle,
   .beam::before,
   .pulse-ring {
     animation: none !important;
   }
-}
-
-/* Form controls share one look. */
-.field {
-  display: grid;
-  gap: 6px;
-}
-.field > label,
-.field > .label {
-  font-size: 0.875rem;
-  font-weight: 560;
-}
-.field .hint {
-  font-size: 0.8125rem;
-  color: var(--muted);
-}
-.input {
-  width: 100%;
-  min-height: 44px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--paper);
-  color: var(--ink);
-  padding: 10px 12px;
-  font: inherit;
-  font-size: 1rem;
-}
-.input:focus {
-  outline: none;
-  border-color: var(--iceplant);
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--iceplant) 20%, transparent);
-}
-textarea.input {
-  min-height: 88px;
-  resize: vertical;
-}
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 44px;
-  padding: 8px 14px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: var(--paper);
-  color: var(--ink);
-  font-size: 0.9375rem;
-  cursor: pointer;
-  user-select: none;
-}
-.chip[aria-pressed="true"],
-.chip:has(input:checked) {
-  border-color: var(--ink);
-  background: var(--ink);
-  color: var(--paper);
-}
-.chip input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 48px;
-  padding: 12px 22px;
-  border-radius: 12px;
-  font-weight: 620;
-  font-size: 1rem;
-  cursor: pointer;
-  transition:
-    transform 120ms ease,
-    background-color 120ms ease;
-}
-.btn:active {
-  transform: translateY(1px);
-}
-.btn-primary {
-  background: var(--iceplant);
-  color: var(--on-iceplant);
-}
-.btn-primary:hover {
-  background: color-mix(in oklab, var(--iceplant) 88%, var(--ink));
-}
-.btn-quiet {
-  border: 1px solid var(--line);
-  background: var(--paper);
-  color: var(--ink);
-}
-.btn-quiet:hover {
-  border-color: var(--ink);
-}
-.btn[disabled] {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.tabular {
-  font-variant-numeric: tabular-nums;
 }

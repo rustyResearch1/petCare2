@@ -41,7 +41,7 @@ const newPet = (): PetDraft => ({
   files: [],
 });
 
-export function IntakeForm() {
+export function IntakeForm({ defaults }: { defaults?: { name: string; email: string } }) {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -49,8 +49,8 @@ export function IntakeForm() {
   const [urgent, setUrgent] = useState(false);
 
   const [owner, setOwner] = useState({
-    name: "",
-    email: "",
+    name: defaults?.name ?? "",
+    email: defaults?.email ?? "",
     phone: "",
     neighborhood: "",
     moveStatus: "moved" as "moved" | "moving",

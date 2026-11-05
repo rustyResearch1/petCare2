@@ -132,6 +132,46 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Bill check */}
+        <section id="bills" className="gutter scroll-mt-20 py-16 sm:py-20">
+          <div className="mx-auto grid max-w-6xl items-start gap-10 lg:grid-cols-[1fr_1fr]">
+            <div className="min-w-0">
+              <h2 className="text-[clamp(2rem,4.5vw,2.75rem)] font-[720] [font-stretch:88%] leading-[1.02]">
+                Paying a lot for meds or visits?
+              </h2>
+              <p className="mt-5 max-w-md leading-relaxed text-muted">
+                Upload a vet invoice. We read every line and show what other San Francisco clinics and pet pharmacies charge
+                for the same thing, with links to where we found it.
+              </p>
+              <Link href="/account/bills" className="btn btn-primary mt-7">
+                Check a bill
+              </Link>
+              <p className="mt-3 text-[0.875rem] text-muted">Free while we&apos;re starting out. Price comparison only, never medical advice.</p>
+            </div>
+            <div className="min-w-0 rounded-[20px] border border-line bg-paper">
+              <div className="flex items-baseline justify-between border-b border-line px-5 py-4">
+                <p className="font-display text-[1.125rem] font-[700] [font-stretch:90%]">Example bill check</p>
+                <span className="rounded-full border border-line px-2.5 py-1 text-[0.75rem] text-muted">Example</span>
+              </div>
+              <dl className="tabular divide-y divide-line">
+                {[
+                  ["Apoquel 16 mg, 30 tablets", "$118.00", "Online pet pharmacies list it for less with a written prescription"],
+                  ["Wellness exam", "$95.00", "Within the range SF clinics quoted us"],
+                  ["Rabies vaccine, 3 year", "$42.00", "Low-cost clinics charge less"],
+                ].map(([item, paid, note]) => (
+                  <div key={item} className="grid gap-1 px-5 py-4">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <dt className="font-[600]">{item}</dt>
+                      <dd className="font-[640]">{paid}</dd>
+                    </div>
+                    <dd className="text-[0.9375rem] text-muted">{note}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </div>
+        </section>
+
         {/* Pricing */}
         <section id="pricing" className="gutter scroll-mt-20 border-t border-line bg-paper py-16 sm:py-20">
           <div className="mx-auto grid max-w-6xl items-end gap-10 lg:grid-cols-2">

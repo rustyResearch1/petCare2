@@ -24,8 +24,11 @@ export function Header({ showCta = true }: { showCta?: boolean }) {
           <Link href="/#how" className="hidden text-muted hover:text-ink sm:inline">
             How it works
           </Link>
-          <Link href="/#pricing" className="hidden text-muted hover:text-ink sm:inline">
-            Pricing
+          <Link href="/#bills" className="hidden text-muted hover:text-ink sm:inline">
+            Bill check
+          </Link>
+          <Link href="/account" className="text-muted hover:text-ink">
+            Account
           </Link>
           {showCta && (
             <Link href="/start" className="btn btn-primary min-h-10 px-4 py-2 text-[0.9375rem]">

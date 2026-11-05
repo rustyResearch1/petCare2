@@ -36,6 +36,11 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
         <form action={setStatus} className="flex items-center gap-2">
           <input type="hidden" name="requestId" value={request.id} />
           <StatusPill status={request.status} />
+          {request.paidAt && (
+            <span className="rounded-full bg-seaglass/15 px-2.5 py-0.5 text-[0.8125rem] font-[600] text-seaglass">
+              Paid ${((request.paidAmountCents ?? 0) / 100).toFixed(2)}
+            </span>
+          )}
           <select name="status" defaultValue={request.status} className="input min-h-10 w-auto py-1.5" aria-label="Status">
             {REQUEST_STATUSES.map((s) => (
               <option key={s} value={s}>{s}</option>

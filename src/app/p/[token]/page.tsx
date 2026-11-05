@@ -7,6 +7,8 @@ import { upcomingVaccines } from "@/lib/records";
 import { SPECIES_LABEL, isSpecies } from "@/lib/species";
 import { site } from "@/lib/site";
 import { InstallHint } from "@/components/pwa/InstallHint";
+import { paymentMode } from "@/lib/payments";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Your setup", robots: { index: false } };
@@ -35,10 +37,11 @@ export default async function OwnerPage({
   searchParams,
 }: {
   params: Promise<{ token: string }>;
-  searchParams: Promise<{ new?: string }>;
+  searchParams: Promise<{ new?: string; paid?: string }>;
 }) {
   const { token } = await params;
-  const { new: isNew } = await searchParams;
+  const { new: isNew, paid } = await searchParams;
+  const pay = paymentMode();
   const data = await getRequestByToken(token);
   if (!data) notFound();
   const { request, owner, pets, appointmentClinic } = data;
@@ -56,6 +59,13 @@ export default async function OwnerPage({
               <p className="mt-1 text-[0.9375rem] leading-relaxed text-muted">
                 We&apos;re on it. Bookmark this page; it updates as we go, and we&apos;ll email {owner.email} when your visit is booked.
               </p>
+            </div>
+          )}
+
+          {paid && (
+            <div role="status" className="mb-8 rounded-2xl border border-seaglass/40 bg-seaglass/10 p-5">
+              <p className="font-[640]">Thanks, your payment went through.</p>
+              <p className="mt-1 text-[0.9375rem] text-muted">Stripe will email your receipt.</p>
             </div>
           )}
 
@@ -93,11 +103,18 @@ export default async function OwnerPage({
                     </div>
                   )}
                   {request.appointment.notes && <p className="mt-3 text-[0.9375rem] text-muted">{request.appointment.notes}</p>}
-                  {site.paymentLinkUrl && (
+                  {request.paidAt ? (
+                    <p className="mt-5 text-[0.9375rem] font-[600] text-seaglass">Paid. Thank you.</p>
+                  ) : pay === "checkout" ? (
+                    <form action="/api/checkout" method="post" className="mt-5">
+                      <input type="hidden" name="token" value={token} />
+                      <button className="btn btn-primary">Pay ${site.pricePerPetUsd * pets.length}</button>
+                    </form>
+                  ) : pay === "link" ? (
                     <a href={site.paymentLinkUrl} target="_blank" rel="noreferrer" className="btn btn-primary mt-5">
                       Pay ${site.pricePerPetUsd * pets.length}
                     </a>
-                  )}
+                  ) : null}
                 </div>
               ) : (
                 <p className="rounded-2xl border border-dashed border-line p-5 text-muted">
@@ -172,6 +189,17 @@ export default async function OwnerPage({
                 );
               })}
             </div>
+          </section>
+          <section className="mt-14 grid gap-3 rounded-2xl border border-line bg-paper p-5 sm:grid-cols-[1fr_auto] sm:items-center">
+            <div className="min-w-0">
+              <h2 className="text-[1.125rem] font-[700] [font-stretch:90%]">Keep it all in one place</h2>
+              <p className="mt-1 text-[0.9375rem] text-muted">
+                Sign in with {owner.email} to see updates, check vet bills and message us. No password needed.
+              </p>
+            </div>
+            <Link href={`/signin?email=${encodeURIComponent(owner.email)}&next=/account`} className="btn btn-quiet justify-self-start">
+              Sign in
+            </Link>
           </section>
         </div>
       </main>

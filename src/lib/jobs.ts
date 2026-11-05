@@ -2,6 +2,7 @@ import "server-only";
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "./db/client";
 import { extractPetProfile, extractionConfigured } from "./extract";
+import { loadUpload } from "./storage";
 
 /** Reads a pet's uploaded records with Claude and stores the structured profile. Safe to re-run. */
 export async function runExtraction(petId: string): Promise<void> {
@@ -24,7 +25,7 @@ export async function runExtraction(petId: string): Promise<void> {
   try {
     const profile = await extractPetProfile(
       { name: pet.name, species: pet.speciesOther || pet.species, breed: pet.breed },
-      records.map((r) => ({ filename: r.filename, mimeType: r.mimeType, bytes: r.bytes })),
+      await Promise.all(records.map(async (r) => ({ filename: r.filename, mimeType: r.mimeType, bytes: await loadUpload(r) }))),
     );
     await db.update(schema.pets).set({ profile, extractionStatus: "done" }).where(eq(schema.pets.id, petId));
     await db.insert(schema.activity).values({

@@ -16,6 +16,7 @@ export default function OpsLayout({ children }: { children: React.ReactNode }) {
           </Link>
           <nav className="flex gap-4 text-[0.9375rem]">
             <Link href="/ops" className="text-muted hover:text-ink">Requests</Link>
+            <Link href="/ops/inbox" className="text-muted hover:text-ink">Inbox</Link>
             <Link href="/ops/clinics" className="text-muted hover:text-ink">Clinics</Link>
           </nav>
         </div>

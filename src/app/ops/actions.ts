@@ -7,6 +7,23 @@ import { REQUEST_STATUSES, type RequestStatus, type ActivityKind } from "@/lib/d
 import { runExtraction } from "@/lib/jobs";
 import { importClinicsCsv } from "@/lib/clinic-import";
 import { sfLocalToIso, formatSf } from "@/lib/time";
+import { notify } from "@/lib/notify";
+
+const OWNER_STATUS_TEXT: Partial<Record<RequestStatus, { title: string; body: string }>> = {
+  shortlisting: { title: "We're shortlisting clinics", body: "We're picking clinics near you that see your pet." },
+  contacting: { title: "We're calling clinics", body: "We're confirming which clinics are taking new patients and what a first exam costs." },
+  done: { title: "Your setup is complete", body: "Your pet is set up with a new vet. Your records and what's due next are on your page." },
+};
+
+async function ownerFor(requestId: string) {
+  const db = await getDb();
+  const [row] = await db
+    .select({ email: schema.owners.email, name: schema.owners.name, token: schema.setupRequests.token })
+    .from(schema.setupRequests)
+    .innerJoin(schema.owners, eq(schema.owners.id, schema.setupRequests.ownerId))
+    .where(eq(schema.setupRequests.id, requestId));
+  return row;
+}
 
 const STATUS_LABEL: Record<RequestStatus, string> = {
   new: "New",
@@ -31,6 +48,11 @@ export async function setStatus(formData: FormData) {
   const db = await getDb();
   await db.update(schema.setupRequests).set({ status }).where(eq(schema.setupRequests.id, requestId));
   await db.insert(schema.activity).values({ requestId, kind: "status", body: `Status: ${STATUS_LABEL[status]}` });
+  const text = OWNER_STATUS_TEXT[status];
+  const owner = text ? await ownerFor(requestId) : null;
+  if (text && owner) {
+    await notify({ email: owner.email, kind: "status", requestId, title: text.title, body: text.body, link: `/p/${owner.token}`, ctaLabel: "See your setup" });
+  }
   await touch(requestId);
 }
 
@@ -84,6 +106,18 @@ export async function bookAppointment(formData: FormData) {
     kind: "status",
     body: `Booked ${formatSf(at, { weekday: "short" })} at ${clinic?.name ?? "clinic"}`,
   });
+  const owner = await ownerFor(requestId);
+  if (owner) {
+    await notify({
+      email: owner.email,
+      kind: "booked",
+      requestId,
+      title: `Booked: ${formatSf(at, { weekday: "long" })}`,
+      body: `Your first visit is at ${clinic?.name ?? "the clinic"}.${notes ? `\n${notes}` : ""}\nWe've sent the clinic your pet's records. Details and directions are on your page.`,
+      link: `/p/${owner.token}`,
+      ctaLabel: "See your booking",
+    });
+  }
   await touch(requestId);
 }
 
@@ -122,4 +156,26 @@ export async function importClinics(_: unknown, formData: FormData): Promise<{ m
   } catch (e) {
     return { message: `Couldn't read that CSV: ${e instanceof Error ? e.message : "unknown error"}` };
   }
+}
+
+export async function resolveTask(formData: FormData) {
+  const id = String(formData.get("taskId"));
+  const db = await getDb();
+  await db.update(schema.tasks).set({ status: "done", resolvedAt: new Date() }).where(eq(schema.tasks.id, id));
+  revalidatePath("/ops/inbox");
+}
+
+/** Team reply: appears in the owner's assistant chat and is emailed to them. */
+export async function replyToOwner(formData: FormData) {
+  const email = String(formData.get("email") ?? "").toLowerCase();
+  const body = String(formData.get("body") ?? "").trim();
+  const taskId = String(formData.get("taskId") ?? "");
+  if (!email || !body) return;
+  const db = await getDb();
+  await db.insert(schema.messages).values({ email, role: "team", content: body.slice(0, 4000) });
+  if (taskId && formData.get("resolve") === "on") {
+    await db.update(schema.tasks).set({ status: "done", resolvedAt: new Date() }).where(eq(schema.tasks.id, taskId));
+  }
+  await notify({ email, kind: "team_reply", title: "New message from the Settled team", body, link: "/account/assistant", ctaLabel: "Reply" });
+  revalidatePath("/ops/inbox");
 }

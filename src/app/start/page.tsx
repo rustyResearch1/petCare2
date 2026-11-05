@@ -2,10 +2,14 @@ import type { Metadata } from "next";
 import { Header } from "@/components/site/Header";
 import { IntakeForm } from "@/components/intake/IntakeForm";
 import { site } from "@/lib/site";
+import { currentUser } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Start your setup" };
 
-export default function StartPage() {
+export const dynamic = "force-dynamic";
+
+export default async function StartPage() {
+  const user = await currentUser();
   return (
     <>
       <Header showCta={false} />
@@ -19,7 +23,7 @@ export default function StartPage() {
             when it&apos;s confirmed.
           </p>
           <div className="mt-10">
-            <IntakeForm />
+            <IntakeForm defaults={user ? { name: user.name, email: user.email } : undefined} />
           </div>
         </div>
       </main>
